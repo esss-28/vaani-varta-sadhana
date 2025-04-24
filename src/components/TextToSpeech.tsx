@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,7 +11,7 @@ import {
 } from '@/components/ui/select';
 import { SpeechHelper, AudioVisualizer } from '@/lib/speechUtils';
 import { LANGUAGES, REGIONS, findVoiceByLang } from '@/data/languageData';
-import { Mic, Play, Pause, StopCircle, Download, Copy, Paste } from 'lucide-react';
+import { Mic, Play, Pause, StopCircle, Download, Copy, ClipboardPaste } from 'lucide-react';
 
 const TextToSpeech = () => {
   const [text, setText] = useState<string>('');
@@ -28,7 +27,6 @@ const TextToSpeech = () => {
   const visualizerRef = useRef<HTMLDivElement>(null);
   const audioVisualizerRef = useRef<AudioVisualizer | null>(null);
   
-  // Load voices when component mounts
   useEffect(() => {
     if (!speechHelper.current.isSupported()) {
       alert("Speech synthesis is not supported in this browser. Please try Chrome, Edge or Safari.");
@@ -39,20 +37,17 @@ const TextToSpeech = () => {
       const availableVoices = speechHelper.current.getVoices();
       setVoices(availableVoices);
       
-      // Try to set an Indian English voice as default
       const indianVoice = availableVoices.find(voice => voice.lang === 'en-IN');
       const englishVoice = availableVoices.find(voice => voice.lang.startsWith('en'));
       setSelectedVoice(indianVoice || englishVoice || (availableVoices.length > 0 ? availableVoices[0] : null));
     };
     
-    // Chrome loads voices asynchronously
     if ('onvoiceschanged' in window.speechSynthesis) {
       window.speechSynthesis.onvoiceschanged = loadVoices;
     } else {
       loadVoices();
     }
     
-    // Initialize audio visualizer
     if (visualizerRef.current) {
       audioVisualizerRef.current = new AudioVisualizer(visualizerRef.current, 15);
     }
@@ -70,11 +65,9 @@ const TextToSpeech = () => {
     const regionData = REGIONS.find(r => r.name === selectedRegion);
     if (!regionData) return;
     
-    // Set pitch and rate according to region
     setPitch(regionData.pitch);
     setRate(regionData.rate);
     
-    // Find a suitable voice for the region
     for (const langCode of regionData.languages) {
       const voice = findVoiceByLang(voices, langCode);
       if (voice) {
@@ -183,7 +176,6 @@ const TextToSpeech = () => {
         </div>
         
         <div className="india-card space-y-6">
-          {/* Text input */}
           <Textarea
             placeholder="Type or paste your text here..."
             value={text}
@@ -191,7 +183,6 @@ const TextToSpeech = () => {
             className="min-h-[150px] text-base"
           />
           
-          {/* Visualizer */}
           <div ref={visualizerRef} className="visualizer-container">
             {Array.from({ length: 15 }).map((_, i) => (
               <div key={i} className="visualizer-bar" />
@@ -199,7 +190,6 @@ const TextToSpeech = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Voice Selection */}
             <div>
               <label htmlFor="voice-select" className="block text-sm font-medium mb-2">
                 Voice
@@ -221,7 +211,6 @@ const TextToSpeech = () => {
               </Select>
             </div>
             
-            {/* Region Selection */}
             <div>
               <label htmlFor="region-select" className="block text-sm font-medium mb-2">
                 Regional Preset
@@ -243,7 +232,6 @@ const TextToSpeech = () => {
               </Select>
             </div>
             
-            {/* Rate Slider */}
             <div>
               <label htmlFor="rate-slider" className="block text-sm font-medium mb-2">
                 Rate: {rate.toFixed(1)}
@@ -258,7 +246,6 @@ const TextToSpeech = () => {
               />
             </div>
             
-            {/* Pitch Slider */}
             <div>
               <label htmlFor="pitch-slider" className="block text-sm font-medium mb-2">
                 Pitch: {pitch.toFixed(1)}
@@ -274,7 +261,6 @@ const TextToSpeech = () => {
             </div>
           </div>
           
-          {/* Control buttons */}
           <div className="flex flex-wrap gap-3 justify-center">
             {!isPlaying ? (
               <Button 
@@ -328,7 +314,7 @@ const TextToSpeech = () => {
               onClick={handlePaste} 
               variant="outline"
             >
-              <Paste className="mr-2 h-4 w-4" /> Paste
+              <ClipboardPaste className="mr-2 h-4 w-4" /> Paste
             </Button>
             
             <Button 
