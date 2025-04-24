@@ -7,7 +7,7 @@ import CulturalTabs from '@/components/CulturalTabs';
 import VoicesOfFreedom from '@/components/VoicesOfFreedom';
 import IndiaMap from '@/components/IndiaMap';
 import Footer from '@/components/Footer';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   const [browserSupport, setBrowserSupport] = useState({
@@ -33,10 +33,56 @@ const Index = () => {
         duration: 6000,
       });
     }
+
+    // Fix for speech synthesis in some browsers - ensure voices are loaded
+    if ('speechSynthesis' in window) {
+      // Force the browser to load voices
+      speechSynthesis.getVoices();
+    }
   }, [toast]);
   
   return (
     <div className="min-h-screen flex flex-col">
+      <style jsx global>{`
+        /* Added CSS for map tooltip */
+        .map-tooltip {
+          position: absolute;
+          background-color: white;
+          border-radius: 8px;
+          padding: 16px;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+          max-width: 320px;
+          z-index: 50;
+          opacity: 0;
+          visibility: hidden;
+          transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+        }
+        
+        .map-tooltip.visible {
+          opacity: 1;
+          visibility: visible;
+        }
+        
+        /* Improved visualizer */
+        .visualizer-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 3px;
+          height: 60px;
+          background-color: rgba(0, 0, 0, 0.02);
+          border-radius: 8px;
+          padding: 0 10px;
+        }
+        
+        .visualizer-bar {
+          background: linear-gradient(to top, #FF9933, #138808);
+          width: 5px;
+          height: 3px;
+          transition: height 0.1s ease;
+        }
+      `}</style>
+      
       <Header />
       
       {/* Hero Section */}

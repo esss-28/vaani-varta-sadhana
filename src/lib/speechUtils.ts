@@ -106,13 +106,21 @@ class SpeechHelper {
   }
 }
 
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
 class SpeechRecognitionHelper {
   private recognition: any;
   private isListening = false;
   
   constructor() {
     if (this.isSupported()) {
-      this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+      this.recognition = new SpeechRecognitionAPI();
       this.recognition.continuous = false;
       this.recognition.interimResults = true;
     }

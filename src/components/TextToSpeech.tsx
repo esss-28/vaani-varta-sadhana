@@ -12,6 +12,7 @@ import {
 import { SpeechHelper, AudioVisualizer } from '@/lib/speechUtils';
 import { LANGUAGES, REGIONS, findVoiceByLang } from '@/data/languageData';
 import { Mic, Play, Pause, StopCircle, Download, Copy, ClipboardPaste } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const TextToSpeech = () => {
   const [text, setText] = useState<string>('');
@@ -22,30 +23,47 @@ const TextToSpeech = () => {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [region, setRegion] = useState<string>('');
+  const [voicesLoaded, setVoicesLoaded] = useState<boolean>(false);
   
+  const { toast } = useToast();
   const speechHelper = useRef<SpeechHelper>(new SpeechHelper());
   const visualizerRef = useRef<HTMLDivElement>(null);
   const audioVisualizerRef = useRef<AudioVisualizer | null>(null);
   
   useEffect(() => {
     if (!speechHelper.current.isSupported()) {
-      alert("Speech synthesis is not supported in this browser. Please try Chrome, Edge or Safari.");
+      toast({
+        title: "Speech synthesis not supported",
+        description: "Your browser doesn't support speech synthesis. Please try Chrome, Edge or Safari.",
+        variant: "destructive",
+      });
       return;
     }
     
     const loadVoices = () => {
+      console.log("Loading voices...");
       const availableVoices = speechHelper.current.getVoices();
-      setVoices(availableVoices);
+      console.log(`Found ${availableVoices.length} voices:`, availableVoices.map(v => `${v.name} (${v.lang})`));
       
-      const indianVoice = availableVoices.find(voice => voice.lang === 'en-IN');
-      const englishVoice = availableVoices.find(voice => voice.lang.startsWith('en'));
-      setSelectedVoice(indianVoice || englishVoice || (availableVoices.length > 0 ? availableVoices[0] : null));
+      if (availableVoices.length > 0) {
+        setVoices(availableVoices);
+        setVoicesLoaded(true);
+        
+        const indianVoice = availableVoices.find(voice => voice.lang === 'hi-IN' || voice.lang === 'en-IN');
+        const englishVoice = availableVoices.find(voice => voice.lang.startsWith('en'));
+        const defaultVoice = indianVoice || englishVoice || availableVoices[0];
+        
+        setSelectedVoice(defaultVoice);
+        console.log("Selected default voice:", defaultVoice?.name);
+      } else {
+        setTimeout(loadVoices, 500);
+      }
     };
     
     if ('onvoiceschanged' in window.speechSynthesis) {
       window.speechSynthesis.onvoiceschanged = loadVoices;
     } else {
-      loadVoices();
+      setTimeout(loadVoices, 100);
     }
     
     if (visualizerRef.current) {
@@ -57,7 +75,7 @@ const TextToSpeech = () => {
         speechHelper.current.stop();
       }
     };
-  }, []);
+  }, [toast]);
   
   const handleRegionChange = (selectedRegion: string) => {
     setRegion(selectedRegion);
@@ -84,6 +102,8 @@ const TextToSpeech = () => {
   
   const handlePlay = () => {
     if (!text.trim()) return;
+    
+    console.log("Playing speech with voice:", selectedVoice?.name);
     
     speechHelper.current.speak({
       text,
@@ -150,14 +170,27 @@ const TextToSpeech = () => {
   
   const handleCopy = () => {
     navigator.clipboard.writeText(text);
+    toast({ 
+      title: "Copied to clipboard",
+      description: "Text has been copied to clipboard"
+    });
   };
   
   const handlePaste = async () => {
     try {
       const clipboardText = await navigator.clipboard.readText();
       setText(clipboardText);
+      toast({ 
+        title: "Text pasted",
+        description: "Text has been pasted from clipboard"
+      });
     } catch (error) {
       console.error('Failed to read clipboard:', error);
+      toast({ 
+        title: "Paste failed",
+        description: "Failed to read from clipboard. Please check browser permissions.",
+        variant: "destructive"
+      });
     }
   };
   
@@ -192,14 +225,15 @@ const TextToSpeech = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="voice-select" className="block text-sm font-medium mb-2">
-                Voice
+                Voice {!voicesLoaded && "(Loading voices...)"}
               </label>
               <Select 
                 value={selectedVoice?.voiceURI || ""} 
                 onValueChange={handleVoiceChange}
+                disabled={voices.length === 0}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a voice" />
+                  <SelectValue placeholder={voicesLoaded ? "Select a voice" : "Loading voices..."} />
                 </SelectTrigger>
                 <SelectContent>
                   {voices.map((voice) => (

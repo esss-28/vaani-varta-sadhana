@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { SpeechHelper } from '@/lib/speechUtils';
@@ -10,6 +9,8 @@ const IndiaMap = () => {
   const [activeState, setActiveState] = useState<IndianState | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [speaking, setSpeaking] = useState<boolean>(false);
+  const [tooltipVisible, setTooltipVisible] = useState<boolean>(false);
+  
   const tooltipRef = useRef<HTMLDivElement>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const speechHelper = useRef<SpeechHelper>(new SpeechHelper());
@@ -27,16 +28,30 @@ const IndiaMap = () => {
       const y = event.clientY - mapRect.top;
       
       setTooltipPosition({ x, y });
-      
-      // Make tooltip visible
-      tooltipRef.current.classList.add('visible');
+      setTooltipVisible(true);
     }
   };
   
   const handleStateLeave = () => {
-    if (tooltipRef.current) {
-      tooltipRef.current.classList.remove('visible');
+    // Don't hide the tooltip immediately to allow clicking the button
+    // We'll only hide it if the mouse isn't over the tooltip
+    if (!tooltipRef.current?.contains(document.activeElement)) {
+      setTimeout(() => {
+        if (!tooltipRef.current?.matches(':hover')) {
+          setTooltipVisible(false);
+        }
+      }, 300);
     }
+  };
+  
+  const handleTooltipMouseEnter = () => {
+    // Keep the tooltip visible when hovering over it
+    setTooltipVisible(true);
+  };
+  
+  const handleTooltipMouseLeave = () => {
+    // Hide the tooltip when the mouse leaves it
+    setTooltipVisible(false);
   };
   
   const handleSpeak = () => {
@@ -48,6 +63,9 @@ const IndiaMap = () => {
     // Find a suitable voice for the state's language
     const voices = speechHelper.current.getVoices();
     const voice = findVoiceByLang(voices, activeState.officialLanguageCode);
+    
+    console.log(`Speaking ${activeState.name} sample with language ${activeState.officialLanguageCode}`);
+    console.log(`Selected voice: ${voice?.name || 'Default'}`);
     
     // Speak the sample text
     speechHelper.current.speak({
@@ -100,14 +118,16 @@ const IndiaMap = () => {
             </div>
           </div>
           
-          {/* State Info Tooltip */}
+          {/* State Info Tooltip - Modified to stay visible */}
           <div 
             ref={tooltipRef} 
-            className="map-tooltip"
+            className={`map-tooltip ${tooltipVisible ? 'visible' : ''}`}
             style={{
               left: `${tooltipPosition.x + 10}px`,
               top: `${tooltipPosition.y + 10}px`
             }}
+            onMouseEnter={handleTooltipMouseEnter}
+            onMouseLeave={handleTooltipMouseLeave}
           >
             {activeState && (
               <div className="space-y-2">
