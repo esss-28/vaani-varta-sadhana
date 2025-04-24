@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,14 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				saffron: "#FF9933",
+				indiangreen: "#138808",
+				deeppurple: "#663399",
+				maroon: "#800000",
+				royalblue: "#4169E1",
+				softbeige: "#F5F5DC",
+				taupe: "#483C32",
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -69,7 +77,7 @@ export default {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			keyframes: {
-				'accordion-down': {
+				"accordion-down": {
 					from: {
 						height: '0'
 					},
@@ -77,18 +85,45 @@ export default {
 						height: 'var(--radix-accordion-content-height)'
 					}
 				},
-				'accordion-up': {
+				"accordion-up": {
 					from: {
 						height: 'var(--radix-accordion-content-height)'
 					},
 					to: {
 						height: '0'
 					}
-				}
+				},
+				"float": {
+					"0%, 100%": { transform: "translateY(0)" },
+					"50%": { transform: "translateY(-10px)" }
+				},
+				"pulse-slow": {
+					"0%, 100%": { opacity: "1" },
+					"50%": { opacity: "0.7" }
+				},
+				"wave": {
+					"0%": { transform: "scaleY(1)" },
+					"50%": { transform: "scaleY(0.5)" },
+					"100%": { transform: "scaleY(1)" }
+				},
 			},
 			animation: {
-				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				"accordion-down": "accordion-down 0.2s ease-out",
+				"accordion-up": "accordion-up 0.2s ease-out",
+				"float": "float 3s ease-in-out infinite",
+				"pulse-slow": "pulse-slow 3s ease-in-out infinite",
+				"wave": "wave 1s ease-in-out infinite",
+			},
+			fontFamily: {
+				'poppins': ['Poppins', 'sans-serif'],
+				'devanagari': ['Tiro Devanagari Hindi', 'serif'],
+				'bangla': ['Noto Sans Bengali', 'sans-serif'],
+				'tamil': ['Noto Sans Tamil', 'sans-serif'],
+				'telugu': ['Noto Sans Telugu', 'sans-serif'],
+			},
+			backgroundImage: {
+				'tricolor-gradient': 'linear-gradient(180deg, #FF9933 0%, #FFFFFF 50%, #138808 100%)',
+				'tricolor-horizontal': 'linear-gradient(90deg, #FF9933 0%, #FFFFFF 50%, #138808 100%)',
 			}
 		}
 	},

@@ -1,12 +1,110 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import { useState, useEffect } from 'react';
+import Header from '@/components/Header';
+import TextToSpeech from '@/components/TextToSpeech';
+import VoiceTranslator from '@/components/VoiceTranslator';
+import CulturalTabs from '@/components/CulturalTabs';
+import VoicesOfFreedom from '@/components/VoicesOfFreedom';
+import IndiaMap from '@/components/IndiaMap';
+import Footer from '@/components/Footer';
 
 const Index = () => {
+  const [browserSupport, setBrowserSupport] = useState({
+    speechSynthesis: false,
+    speechRecognition: false
+  });
+  
+  useEffect(() => {
+    // Check browser support for Web Speech API
+    setBrowserSupport({
+      speechSynthesis: 'speechSynthesis' in window,
+      speechRecognition: 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window
+    });
+  }, []);
+  
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      
+      {/* Hero Section */}
+      <section className="bg-gradient-to-b from-slate-50 to-softbeige py-20 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <div className="flex flex-col lg:flex-row items-center justify-between">
+            <div className="lg:w-1/2 mb-8 lg:mb-0 text-center lg:text-left">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+                <span className="text-saffron">Speak</span> in the language of{" "}
+                <span className="text-indiangreen">India</span>
+              </h1>
+              <p className="text-lg mb-8 text-gray-700 max-w-lg mx-auto lg:mx-0">
+                Experience the rich linguistic diversity of India with Vaani's text-to-speech and voice translation technology.
+              </p>
+              <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
+                <a href="#tts" className="saffron-button">
+                  Start Speaking
+                </a>
+                <a href="#translator" className="green-button">
+                  Translate Voice
+                </a>
+              </div>
+              
+              {/* Browser Support Warning */}
+              {(!browserSupport.speechSynthesis || !browserSupport.speechRecognition) && (
+                <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-md text-amber-800 text-sm">
+                  <p className="font-medium">Browser Compatibility Warning</p>
+                  <ul className="mt-2 list-disc list-inside">
+                    {!browserSupport.speechSynthesis && (
+                      <li>Speech synthesis is not supported in your browser.</li>
+                    )}
+                    {!browserSupport.speechRecognition && (
+                      <li>Speech recognition is not supported in your browser.</li>
+                    )}
+                    <li className="mt-1">
+                      For the best experience, please use Chrome, Edge, or Safari.
+                    </li>
+                  </ul>
+                </div>
+              )}
+            </div>
+            <div className="lg:w-1/2">
+              <div className="relative">
+                <div className="absolute -top-10 -left-10 w-40 h-40 bg-saffron/20 rounded-full blur-3xl"></div>
+                <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-indiangreen/20 rounded-full blur-3xl"></div>
+                <div className="relative bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                  <div className="flex items-center space-x-4 mb-6">
+                    <span className="w-3 h-3 bg-red-400 rounded-full"></span>
+                    <span className="w-3 h-3 bg-yellow-400 rounded-full"></span>
+                    <span className="w-3 h-3 bg-green-400 rounded-full"></span>
+                    <div className="flex-1 h-8 bg-slate-100 rounded flex items-center justify-center text-sm text-slate-400">
+                      Vaani Speech Interface
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-slate-50 rounded border border-slate-100">
+                      <p className="text-sm font-medium mb-1">English</p>
+                      <p className="text-gray-700">Welcome to Vaani, your Indian language companion.</p>
+                    </div>
+                    <div className="p-4 bg-slate-50 rounded border border-slate-100">
+                      <p className="text-sm font-medium mb-1">Hindi</p>
+                      <p className="font-devanagari text-gray-700">वाणी में आपका स्वागत है, आपका भारतीय भाषा साथी।</p>
+                    </div>
+                    <div className="p-4 bg-slate-50 rounded border border-slate-100">
+                      <p className="text-sm font-medium mb-1">Bengali</p>
+                      <p className="font-bangla text-gray-700">ভানি-তে আপনাকে স্বাগতম, আপনার ভারতীয় ভাষার সঙ্গী।</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <TextToSpeech />
+      <VoiceTranslator />
+      <CulturalTabs />
+      <VoicesOfFreedom />
+      <IndiaMap />
+      <Footer />
     </div>
   );
 };
