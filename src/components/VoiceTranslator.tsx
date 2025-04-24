@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
 import {
   Select,
   SelectContent,
@@ -9,9 +10,9 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { SpeechHelper, SpeechRecognitionHelper, translateText } from '@/lib/speechUtils';
+import { SpeechHelper, SpeechRecognitionHelper, translateText, mockTranslate } from '@/lib/speechUtils';
 import { TRANSLATION_LANGUAGES, findVoiceByLang } from '@/data/languageData';
-import { Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import { Mic, MicOff, Volume2, VolumeX, RefreshCw } from 'lucide-react';
 
 const VoiceTranslator = () => {
   const [fromLanguage, setFromLanguage] = useState<string>('en');
@@ -22,7 +23,9 @@ const VoiceTranslator = () => {
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [isTranslating, setIsTranslating] = useState<boolean>(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [translationError, setTranslationError] = useState<string | null>(null);
   
+  const { toast } = useToast();
   const speechHelper = useRef<SpeechHelper>(new SpeechHelper());
   const recognitionHelper = useRef<SpeechRecognitionHelper>(new SpeechRecognitionHelper());
   
@@ -53,13 +56,18 @@ const VoiceTranslator = () => {
   // Handle speech recognition
   const handleStartListening = () => {
     if (!recognitionHelper.current.isSupported()) {
-      alert('Speech recognition is not supported in this browser. Please try Chrome or Edge.');
+      toast({
+        title: "Browser Not Supported",
+        description: "Speech recognition is not supported in this browser. Please try Chrome or Edge.",
+        variant: "destructive"
+      });
       return;
     }
     
     setIsListening(true);
     setOriginalText('');
     setTranslatedText('');
+    setTranslationError(null);
     
     const languageCode = fromLanguage;
     recognitionHelper.current.startListening(
@@ -87,15 +95,45 @@ const VoiceTranslator = () => {
     if (!text.trim()) return;
     
     setIsTranslating(true);
+    setTranslationError(null);
+    
+    if (fromLanguage === toLanguage) {
+      // No translation needed if languages are the same
+      setTranslatedText(text);
+      setIsTranslating(false);
+      speakTranslation(text);
+      return;
+    }
+    
     try {
       const translated = await translateText(text, fromLanguage, toLanguage);
       setTranslatedText(translated);
       speakTranslation(translated);
     } catch (error) {
       console.error('Translation error:', error);
-      setTranslatedText('Translation error occurred. Please try again.');
+      
+      // Show toast notification
+      toast({
+        title: "Translation Error",
+        description: "Could not connect to translation service. Using simplified translation instead.",
+        variant: "destructive"
+      });
+      
+      setTranslationError("Translation API error. Using simplified translation instead.");
+      
+      // Fall back to mock translation
+      const mockResult = mockTranslate(text, toLanguage);
+      setTranslatedText(mockResult);
+      speakTranslation(mockResult);
     } finally {
       setIsTranslating(false);
+    }
+  };
+  
+  // Retry translation manually
+  const handleRetryTranslation = () => {
+    if (originalText) {
+      handleTranslate(originalText);
     }
   };
   
@@ -223,6 +261,17 @@ const VoiceTranslator = () => {
             <CardHeader>
               <CardTitle className="text-lg flex items-center justify-between">
                 <span>Translated Text</span>
+                {translationError && (
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={handleRetryTranslation}
+                    className="h-8 px-2"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-1" />
+                    Retry
+                  </Button>
+                )}
                 {isSpeaking && (
                   <Button 
                     size="sm" 
@@ -241,6 +290,21 @@ const VoiceTranslator = () => {
                   <div className="flex items-center justify-center h-full">
                     <div className="spinner"></div>
                     <span className="ml-2">Translating...</span>
+                  </div>
+                ) : translationError ? (
+                  <div>
+                    <p className="text-amber-600 text-sm mb-2">{translationError}</p>
+                    <p>{translatedText}</p>
+                    {!isSpeaking && translatedText && (
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => speakTranslation(translatedText)}
+                        className="mt-2"
+                      >
+                        <Volume2 className="mr-1 h-4 w-4" /> Listen
+                      </Button>
+                    )}
                   </div>
                 ) : translatedText ? (
                   <>
@@ -268,6 +332,9 @@ const VoiceTranslator = () => {
           <p className="text-sm text-muted-foreground">
             Note: Voice recognition works best in Chrome or Edge browsers. 
             For optimal translation results, speak clearly.
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Free translation APIs may have limited capacity. If translation fails, the app will provide a basic translation.
           </p>
         </div>
       </div>

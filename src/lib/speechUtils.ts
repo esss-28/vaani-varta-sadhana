@@ -1,4 +1,3 @@
-
 interface SpeechOption {
   text: string;
   voice?: SpeechSynthesisVoice;
@@ -88,9 +87,6 @@ class SpeechHelper {
   }
   
   downloadSpeech(text: string, voice: SpeechSynthesisVoice | null, rate: number, pitch: number): void {
-    // This is a simplified version - in reality browser APIs don't directly support
-    // downloading TTS content. This would typically require a backend service.
-    // For demo purposes, we'll just create a text file with the speech parameters.
     const element = document.createElement('a');
     const params = {
       text,
@@ -111,12 +107,11 @@ class SpeechHelper {
 }
 
 class SpeechRecognitionHelper {
-  private recognition: any; // Type is any because the API isn't standardized yet
+  private recognition: any;
   private isListening = false;
   
   constructor() {
     if (this.isSupported()) {
-      // @ts-ignore: webkitSpeechRecognition is not recognized in TypeScript
       this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
       this.recognition.continuous = false;
       this.recognition.interimResults = true;
@@ -124,7 +119,6 @@ class SpeechRecognitionHelper {
   }
   
   isSupported(): boolean {
-    // @ts-ignore: webkitSpeechRecognition is not recognized in TypeScript
     return 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
   }
   
@@ -161,34 +155,78 @@ class SpeechRecognitionHelper {
   }
 }
 
-// Simple helper for LibreTranslate API
 async function translateText(text: string, sourceLang: string, targetLang: string): Promise<string> {
-  try {
-    const response = await fetch('https://libretranslate.de/translate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        q: text,
-        source: sourceLang,
-        target: targetLang
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Translation failed');
-    }
-    
-    const data = await response.json();
-    return data.translatedText;
-  } catch (error) {
-    console.error('Translation error:', error);
-    return 'Translation error occurred. Please try again.';
+  if (sourceLang === targetLang) {
+    return text;
   }
+  
+  const servers = [
+    'https://libretranslate.de',
+    'https://translate.argosopentech.com',
+    'https://translate.terraprint.co'
+  ];
+  
+  let lastError = null;
+  
+  for (const server of servers) {
+    try {
+      console.log(`Attempting translation with server: ${server}`);
+      
+      const response = await fetch(`${server}/translate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          q: text,
+          source: sourceLang,
+          target: targetLang
+        }),
+        signal: AbortSignal.timeout(10000)
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Translation error (status ${response.status}):`, errorText);
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!data.translatedText) {
+        throw new Error('Invalid response format - missing translatedText field');
+      }
+      
+      console.log('Translation successful');
+      return data.translatedText;
+    } catch (error) {
+      console.error(`Translation error with server ${server}:`, error);
+      lastError = error;
+    }
+  }
+  
+  console.error('All translation servers failed');
+  throw lastError || new Error('Translation failed on all servers');
 }
 
-// Helper for simulating audio visualization
+function mockTranslate(text: string, targetLang: string): string {
+  const langPrefixes: Record<string, string> = {
+    hi: "[हिन्दी] ",
+    bn: "[বাংলা] ",
+    te: "[తెలుగు] ",
+    ta: "[தமிழ்] ",
+    mr: "[मराठी] ",
+    gu: "[ગુજરાતી] ",
+    kn: "[ಕನ್ನಡ] ",
+    ml: "[മലയാളം] ",
+    pa: "[ਪੰਜਾਬੀ] ",
+    en: ""
+  };
+  
+  const prefix = langPrefixes[targetLang] || "";
+  return prefix + text;
+}
+
 class AudioVisualizer {
   private container: HTMLElement;
   private bars: HTMLElement[] = [];
@@ -215,7 +253,7 @@ class AudioVisualizer {
     
     const animate = () => {
       this.bars.forEach(bar => {
-        const height = Math.floor(Math.random() * 40) + 5; // Random height between 5-45px
+        const height = Math.floor(Math.random() * 40) + 5;
         bar.style.height = `${height}px`;
       });
       
@@ -230,7 +268,6 @@ class AudioVisualizer {
       cancelAnimationFrame(this.animationId);
       this.animationId = null;
       
-      // Reset all bars to minimal height
       this.bars.forEach(bar => {
         bar.style.height = '3px';
       });
@@ -246,5 +283,6 @@ export {
   SpeechHelper, 
   SpeechRecognitionHelper, 
   AudioVisualizer,
-  translateText 
+  translateText,
+  mockTranslate
 };

@@ -7,20 +7,33 @@ import CulturalTabs from '@/components/CulturalTabs';
 import VoicesOfFreedom from '@/components/VoicesOfFreedom';
 import IndiaMap from '@/components/IndiaMap';
 import Footer from '@/components/Footer';
+import { useToast } from '@/components/ui/use-toast';
 
 const Index = () => {
   const [browserSupport, setBrowserSupport] = useState({
     speechSynthesis: false,
     speechRecognition: false
   });
+  const { toast } = useToast();
   
   useEffect(() => {
     // Check browser support for Web Speech API
-    setBrowserSupport({
+    const supportCheck = {
       speechSynthesis: 'speechSynthesis' in window,
       speechRecognition: 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window
-    });
-  }, []);
+    };
+    
+    setBrowserSupport(supportCheck);
+    
+    // Show toast for browser compatibility issues
+    if (!supportCheck.speechSynthesis || !supportCheck.speechRecognition) {
+      toast({
+        title: "Browser Compatibility Warning",
+        description: "Some features may not work in your browser. For best experience, use Chrome, Edge, or Safari.",
+        duration: 6000,
+      });
+    }
+  }, [toast]);
   
   return (
     <div className="min-h-screen flex flex-col">
