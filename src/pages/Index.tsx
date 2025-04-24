@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import TextToSpeech from '@/components/TextToSpeech';
@@ -17,7 +16,6 @@ const Index = () => {
   const { toast } = useToast();
   
   useEffect(() => {
-    // Check browser support for Web Speech API
     const supportCheck = {
       speechSynthesis: 'speechSynthesis' in window,
       speechRecognition: 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window
@@ -25,7 +23,6 @@ const Index = () => {
     
     setBrowserSupport(supportCheck);
     
-    // Show toast for browser compatibility issues
     if (!supportCheck.speechSynthesis || !supportCheck.speechRecognition) {
       toast({
         title: "Browser Compatibility Warning",
@@ -34,17 +31,14 @@ const Index = () => {
       });
     }
 
-    // Fix for speech synthesis in some browsers - ensure voices are loaded
     if ('speechSynthesis' in window) {
-      // Force the browser to load voices
       speechSynthesis.getVoices();
     }
   }, [toast]);
   
   return (
     <div className="min-h-screen flex flex-col">
-      <style jsx global>{`
-        /* Added CSS for map tooltip */
+      <style>{`
         .map-tooltip {
           position: absolute;
           background-color: white;
@@ -63,7 +57,6 @@ const Index = () => {
           visibility: visible;
         }
         
-        /* Improved visualizer */
         .visualizer-container {
           display: flex;
           align-items: center;
@@ -85,7 +78,6 @@ const Index = () => {
       
       <Header />
       
-      {/* Hero Section */}
       <section className="bg-gradient-to-b from-slate-50 to-softbeige py-20 px-4">
         <div className="container mx-auto max-w-6xl">
           <div className="flex flex-col lg:flex-row items-center justify-between">
@@ -106,7 +98,6 @@ const Index = () => {
                 </a>
               </div>
               
-              {/* Browser Support Warning */}
               {(!browserSupport.speechSynthesis || !browserSupport.speechRecognition) && (
                 <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-md text-amber-800 text-sm">
                   <p className="font-medium">Browser Compatibility Warning</p>

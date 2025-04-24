@@ -14,9 +14,31 @@ class SpeechHelper {
   private utterance: SpeechSynthesisUtterance | null = null;
   private isPlaying = false;
   private isPaused = false;
+  private voicesLoaded = false;
   
   constructor() {
     this.synth = window.speechSynthesis;
+    this.initializeVoices();
+  }
+  
+  private initializeVoices(): void {
+    // Try to load voices immediately
+    if (this.synth.getVoices().length > 0) {
+      this.voicesLoaded = true;
+      return;
+    }
+
+    // If voices aren't available, set up the event listener
+    this.synth.addEventListener('voiceschanged', () => {
+      this.voicesLoaded = true;
+    });
+
+    // Fallback for some browsers
+    setTimeout(() => {
+      if (!this.voicesLoaded && this.synth.getVoices().length > 0) {
+        this.voicesLoaded = true;
+      }
+    }, 100);
   }
   
   isSupported(): boolean {
@@ -24,7 +46,9 @@ class SpeechHelper {
   }
   
   getVoices(): SpeechSynthesisVoice[] {
-    return this.synth.getVoices();
+    const voices = this.synth.getVoices();
+    console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
+    return voices;
   }
   
   speak(options: SpeechOption): void {
@@ -32,7 +56,13 @@ class SpeechHelper {
     
     const utterance = new SpeechSynthesisUtterance(options.text);
     
-    if (options.voice) utterance.voice = options.voice;
+    if (options.voice) {
+      utterance.voice = options.voice;
+      console.log('Using voice:', options.voice.name, options.voice.lang);
+    } else {
+      console.log('No voice specified, using default');
+    }
+    
     if (options.rate !== undefined) utterance.rate = options.rate;
     if (options.pitch !== undefined) utterance.pitch = options.pitch;
     
@@ -56,6 +86,10 @@ class SpeechHelper {
     utterance.onresume = () => {
       this.isPaused = false;
       if (options.onResume) options.onResume();
+    };
+    
+    utterance.onerror = (event) => {
+      console.error('Speech synthesis error:', event);
     };
     
     this.utterance = utterance;

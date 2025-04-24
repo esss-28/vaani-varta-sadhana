@@ -41,29 +41,33 @@ const TextToSpeech = () => {
     }
     
     const loadVoices = () => {
-      console.log("Loading voices...");
       const availableVoices = speechHelper.current.getVoices();
-      console.log(`Found ${availableVoices.length} voices:`, availableVoices.map(v => `${v.name} (${v.lang})`));
       
-      if (availableVoices.length > 0) {
-        setVoices(availableVoices);
-        setVoicesLoaded(true);
-        
-        const indianVoice = availableVoices.find(voice => voice.lang === 'hi-IN' || voice.lang === 'en-IN');
-        const englishVoice = availableVoices.find(voice => voice.lang.startsWith('en'));
-        const defaultVoice = indianVoice || englishVoice || availableVoices[0];
-        
+      if (availableVoices.length === 0) {
+        console.log("No voices available yet, retrying in 100ms...");
+        setTimeout(loadVoices, 100);
+        return;
+      }
+      
+      console.log(`Found ${availableVoices.length} voices`);
+      setVoices(availableVoices);
+      setVoicesLoaded(true);
+      
+      const hindiVoice = availableVoices.find(voice => voice.lang === 'hi-IN');
+      const indianEnglishVoice = availableVoices.find(voice => voice.lang === 'en-IN');
+      const englishVoice = availableVoices.find(voice => voice.lang.startsWith('en'));
+      
+      const defaultVoice = hindiVoice || indianEnglishVoice || englishVoice || availableVoices[0];
+      if (defaultVoice) {
+        console.log('Selected default voice:', defaultVoice.name, defaultVoice.lang);
         setSelectedVoice(defaultVoice);
-        console.log("Selected default voice:", defaultVoice?.name);
-      } else {
-        setTimeout(loadVoices, 500);
       }
     };
     
+    loadVoices();
+    
     if ('onvoiceschanged' in window.speechSynthesis) {
       window.speechSynthesis.onvoiceschanged = loadVoices;
-    } else {
-      setTimeout(loadVoices, 100);
     }
     
     if (visualizerRef.current) {
