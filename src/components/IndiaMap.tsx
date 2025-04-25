@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { SpeechHelper } from '@/lib/speechUtils';
@@ -75,32 +74,40 @@ const IndiaMap = () => {
   }, []);
   
   return (
-    <section id="map" className="py-16 px-4 md:px-6">
+    <section id="map" className="py-16 px-4 md:px-6 bg-gradient-to-b from-slate-50 to-softbeige">
       <div className="container mx-auto max-w-7xl">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold">Linguistic Map of India</h2>
+          <h2 className="text-3xl font-bold">
+            <span className="text-saffron">Linguistic</span>{" "}
+            <span className="text-black">Map of</span>{" "}
+            <span className="text-indiangreen">India</span>
+          </h2>
           <p className="text-muted-foreground mt-2">
             Explore the diverse languages across Indian states
           </p>
         </div>
         
-        <div className="relative india-card p-0 overflow-hidden" ref={mapContainerRef}>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        <div className="relative india-card p-6 bg-white/80 backdrop-blur-sm shadow-xl rounded-xl border border-gray-100" ref={mapContainerRef}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {indianStates.map((state) => (
               <button
                 key={state.id}
-                className="text-sm p-2 border rounded hover:bg-gray-200 focus:outline-none"
+                className="relative p-3 border-2 border-gray-100 rounded-lg transition-all duration-300 
+                         hover:border-indiangreen hover:shadow-md hover:scale-105 
+                         focus:outline-none focus:ring-2 focus:ring-saffron
+                         bg-gradient-to-br from-white to-gray-50"
                 onMouseEnter={(e) => handleStateHover(state.id, e)}
                 onMouseLeave={handleStateLeave}
               >
-                {state.name}
+                <span className="block text-sm font-medium">{state.name}</span>
+                <span className="block text-xs text-gray-500 mt-1">{state.officialLanguage}</span>
               </button>
             ))}
           </div>
           
           <div 
             ref={tooltipRef} 
-            className={`map-tooltip ${tooltipVisible ? 'visible' : ''}`}
+            className={`map-tooltip ${tooltipVisible ? 'visible' : ''} bg-white/95 backdrop-blur-sm border-2 border-gray-100`}
             style={{
               left: `${tooltipPosition.x + 10}px`,
               top: `${tooltipPosition.y + 10}px`
@@ -109,22 +116,24 @@ const IndiaMap = () => {
             onMouseLeave={handleTooltipMouseLeave}
           >
             {activeState && (
-              <div className="space-y-2">
-                <h3 className="font-bold text-lg">{activeState.name}</h3>
+              <div className="space-y-3">
+                <h3 className="font-bold text-lg bg-gradient-to-r from-saffron to-indiangreen bg-clip-text text-transparent">
+                  {activeState.name}
+                </h3>
                 <div className="grid grid-cols-2 gap-x-4 text-sm">
-                  <span className="font-medium">Official Language:</span>
-                  <span>{activeState.officialLanguage}</span>
+                  <span className="font-medium text-gray-600">Official Language:</span>
+                  <span className="text-gray-900">{activeState.officialLanguage}</span>
                   
-                  <span className="font-medium">Other Languages:</span>
-                  <span>{activeState.otherLanguages.join(', ')}</span>
+                  <span className="font-medium text-gray-600">Other Languages:</span>
+                  <span className="text-gray-900">{activeState.otherLanguages.join(', ')}</span>
                 </div>
-                <p className="text-sm mt-2">{activeState.culturalNote}</p>
+                <p className="text-sm mt-2 text-gray-700 italic">{activeState.culturalNote}</p>
                 <div className="mt-3">
                   <Button
                     size="sm"
                     onClick={handleSpeak}
                     disabled={speaking}
-                    className="w-full bg-indiangreen hover:bg-indiangreen/90"
+                    className="w-full bg-gradient-to-r from-saffron to-indiangreen hover:opacity-90 transition-opacity"
                   >
                     <Volume2 className="mr-1 h-4 w-4" />
                     {speaking ? 'Speaking...' : 'Hear Sample'}
