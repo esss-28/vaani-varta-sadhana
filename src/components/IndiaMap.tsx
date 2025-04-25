@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { SpeechHelper } from '@/lib/speechUtils';
@@ -21,7 +22,6 @@ const IndiaMap = () => {
     
     setActiveState(state);
     
-    // Position the tooltip
     if (tooltipRef.current && mapContainerRef.current) {
       const mapRect = mapContainerRef.current.getBoundingClientRect();
       const x = event.clientX - mapRect.left;
@@ -33,8 +33,6 @@ const IndiaMap = () => {
   };
   
   const handleStateLeave = () => {
-    // Don't hide the tooltip immediately to allow clicking the button
-    // We'll only hide it if the mouse isn't over the tooltip
     if (!tooltipRef.current?.contains(document.activeElement)) {
       setTimeout(() => {
         if (!tooltipRef.current?.matches(':hover')) {
@@ -45,29 +43,21 @@ const IndiaMap = () => {
   };
   
   const handleTooltipMouseEnter = () => {
-    // Keep the tooltip visible when hovering over it
     setTooltipVisible(true);
   };
   
   const handleTooltipMouseLeave = () => {
-    // Hide the tooltip when the mouse leaves it
     setTooltipVisible(false);
   };
   
   const handleSpeak = () => {
     if (!activeState) return;
     
-    // Stop any ongoing speech
     speechHelper.current.stop();
     
-    // Find a suitable voice for the state's language
     const voices = speechHelper.current.getVoices();
     const voice = findVoiceByLang(voices, activeState.officialLanguageCode);
     
-    console.log(`Speaking ${activeState.name} sample with language ${activeState.officialLanguageCode}`);
-    console.log(`Selected voice: ${voice?.name || 'Default'}`);
-    
-    // Speak the sample text
     speechHelper.current.speak({
       text: activeState.sampleText,
       voice: voice || undefined,
@@ -76,7 +66,6 @@ const IndiaMap = () => {
     });
   };
   
-  // Clean up speech on unmount
   useEffect(() => {
     return () => {
       if (speechHelper.current) {
@@ -96,29 +85,19 @@ const IndiaMap = () => {
         </div>
         
         <div className="relative india-card p-0 overflow-hidden" ref={mapContainerRef}>
-          {/* This would be an interactive SVG map of India */}
-          <div className="bg-gray-100 p-6 text-center h-[500px] flex items-center justify-center">
-            <div className="max-w-lg mx-auto">
-              <h3 className="text-xl mb-4">Interactive India Map</h3>
-              <p className="mb-6">This would be an SVG map of India where each state is interactive. Hover over a state to see its language details.</p>
-              
-              {/* Example state buttons for demonstration */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {indianStates.slice(0, 12).map((state) => (
-                  <button
-                    key={state.id}
-                    className="text-sm p-2 border rounded hover:bg-gray-200 focus:outline-none"
-                    onMouseEnter={(e) => handleStateHover(state.id, e)}
-                    onMouseLeave={handleStateLeave}
-                  >
-                    {state.name}
-                  </button>
-                ))}
-              </div>
-            </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {indianStates.map((state) => (
+              <button
+                key={state.id}
+                className="text-sm p-2 border rounded hover:bg-gray-200 focus:outline-none"
+                onMouseEnter={(e) => handleStateHover(state.id, e)}
+                onMouseLeave={handleStateLeave}
+              >
+                {state.name}
+              </button>
+            ))}
           </div>
           
-          {/* State Info Tooltip - Modified to stay visible */}
           <div 
             ref={tooltipRef} 
             className={`map-tooltip ${tooltipVisible ? 'visible' : ''}`}
