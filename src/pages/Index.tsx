@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import TextToSpeech from '@/components/TextToSpeech';
@@ -6,6 +5,7 @@ import VoiceTranslator from '@/components/VoiceTranslator';
 import CulturalTabs from '@/components/CulturalTabs';
 import VoicesOfFreedom from '@/components/VoicesOfFreedom';
 import IndiaMap from '@/components/IndiaMap';
+import ProjectSynopsis from '@/components/ProjectSynopsis';
 import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
 
@@ -175,6 +175,7 @@ const Index = () => {
       <CulturalTabs />
       <VoicesOfFreedom />
       <IndiaMap />
+      <ProjectSynopsis />
       <Footer />
     </div>
   );
