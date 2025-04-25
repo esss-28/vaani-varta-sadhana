@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,7 +12,7 @@ import {
 } from '@/components/ui/select';
 import { SpeechHelper, AudioVisualizer } from '@/lib/speechUtils';
 import { LANGUAGES, REGIONS, findVoiceByLang } from '@/data/languageData';
-import { Mic, Play, Pause, StopCircle, Download, Copy, ClipboardPaste } from 'lucide-react';
+import { Mic, Play, Pause, StopCircle, Download, Copy, ClipboardPaste, AudioLines } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const TextToSpeech = () => {
@@ -77,6 +78,9 @@ const TextToSpeech = () => {
     return () => {
       if (speechHelper.current) {
         speechHelper.current.stop();
+      }
+      if (audioVisualizerRef.current) {
+        audioVisualizerRef.current.stop();
       }
     };
   }, [toast]);
@@ -220,10 +224,17 @@ const TextToSpeech = () => {
             className="min-h-[150px] text-base"
           />
           
-          <div ref={visualizerRef} className="visualizer-container">
-            {Array.from({ length: 15 }).map((_, i) => (
-              <div key={i} className="visualizer-bar" />
-            ))}
+          <div className="relative overflow-hidden">
+            <div ref={visualizerRef} className="visualizer-container">
+              {Array.from({ length: 15 }).map((_, i) => (
+                <div key={i} className="visualizer-bar" />
+              ))}
+            </div>
+            {isPlaying && (
+              <div className="absolute top-2 right-2 bg-white/80 rounded-full p-1">
+                <AudioLines className="h-4 w-4 text-indiangreen animate-pulse" />
+              </div>
+            )}
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

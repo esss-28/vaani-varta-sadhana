@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import TextToSpeech from '@/components/TextToSpeech';
@@ -66,13 +67,33 @@ const Index = () => {
           background-color: rgba(0, 0, 0, 0.02);
           border-radius: 8px;
           padding: 0 10px;
+          overflow: hidden;
+          position: relative;
+        }
+        
+        .visualizer-container::after {
+          content: '';
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          height: 1px;
+          background: linear-gradient(to right, transparent, rgba(255, 153, 51, 0.5), rgba(19, 136, 8, 0.5), transparent);
         }
         
         .visualizer-bar {
           background: linear-gradient(to top, #FF9933, #138808);
           width: 5px;
           height: 3px;
-          transition: height 0.1s ease;
+          border-radius: 2px 2px 0 0;
+          transition: height 0.1s ease-out;
+          will-change: height;
+        }
+        
+        @media (prefers-reduced-motion: reduce) {
+          .visualizer-bar {
+            transition: none;
+          }
         }
       `}</style>
       

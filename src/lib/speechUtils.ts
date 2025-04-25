@@ -1,3 +1,4 @@
+
 interface SpeechOption {
   text: string;
   voice?: SpeechSynthesisVoice;
@@ -273,10 +274,27 @@ class AudioVisualizer {
   private container: HTMLElement;
   private bars: HTMLElement[] = [];
   private animationId: number | null = null;
+  private analyser: AnalyserNode | null = null;
+  private audioContext: AudioContext | null = null;
+  private dataArray: Uint8Array | null = null;
+  private source: MediaStreamAudioSourceNode | null = null;
+  private isSimulationMode: boolean = true;
   
   constructor(container: HTMLElement, barCount: number = 20) {
     this.container = container;
     this.createBars(barCount);
+    
+    // Try to initialize audio context if available
+    try {
+      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      this.analyser = this.audioContext.createAnalyser();
+      this.analyser.fftSize = 256;
+      const bufferLength = this.analyser.frequencyBinCount;
+      this.dataArray = new Uint8Array(bufferLength);
+    } catch (e) {
+      console.log('Web Audio API not supported, falling back to simulation mode');
+      this.isSimulationMode = true;
+    }
   }
   
   private createBars(count: number): void {
@@ -290,19 +308,90 @@ class AudioVisualizer {
     }
   }
   
-  start(): void {
-    if (this.animationId) return;
+  private connectToAudioSource(): void {
+    if (!this.audioContext || !this.analyser) return;
     
+    try {
+      if (this.source) {
+        this.source.disconnect();
+      }
+      
+      // Try to get the audio output stream
+      navigator.mediaDevices.getDisplayMedia({ audio: true, video: false })
+        .then(stream => {
+          this.source = this.audioContext!.createMediaStreamSource(stream);
+          this.source.connect(this.analyser);
+        })
+        .catch(err => {
+          console.error('Error accessing audio output:', err);
+          this.isSimulationMode = true;
+          this.simulateVisualization();
+        });
+    } catch (err) {
+      console.error('Error connecting to audio source:', err);
+      this.isSimulationMode = true;
+      this.simulateVisualization();
+    }
+  }
+  
+  private animateWithAudioData(): void {
+    if (!this.analyser || !this.dataArray) return;
+    
+    this.analyser.getByteFrequencyData(this.dataArray);
+    
+    const barWidth = Math.floor(this.dataArray.length / this.bars.length);
+    
+    for (let i = 0; i < this.bars.length; i++) {
+      const start = i * barWidth;
+      let sum = 0;
+      
+      for (let j = 0; j < barWidth; j++) {
+        sum += this.dataArray[start + j] || 0;
+      }
+      
+      const average = sum / barWidth;
+      const height = Math.max(3, Math.floor((average / 255) * 50));
+      this.bars[i].style.height = `${height}px`;
+    }
+    
+    this.animationId = requestAnimationFrame(() => this.animateWithAudioData());
+  }
+  
+  private simulateVisualization(): void {
     const animate = () => {
-      this.bars.forEach(bar => {
-        const height = Math.floor(Math.random() * 40) + 5;
-        bar.style.height = `${height}px`;
-      });
+      // Generate more natural-looking patterns for speech
+      const time = Date.now() / 1000;
+      const barCount = this.bars.length;
+      
+      for (let i = 0; i < barCount; i++) {
+        // Create a wave pattern with different frequencies
+        const sinInput = time * 5 + (i / barCount) * Math.PI * 2;
+        const sinValue = Math.sin(sinInput) * 0.5 + 0.5; // Range 0-1
+        
+        // Add some randomness to make it look more natural
+        const randomness = Math.random() * 0.3;
+        const combinedValue = sinValue * 0.7 + randomness;
+        
+        // Map to height (minimum 3px, maximum 45px)
+        const height = Math.max(3, Math.floor(combinedValue * 42) + 3);
+        this.bars[i].style.height = `${height}px`;
+      }
       
       this.animationId = requestAnimationFrame(animate);
     };
     
     animate();
+  }
+  
+  start(): void {
+    if (this.animationId) return;
+    
+    if (this.isSimulationMode) {
+      this.simulateVisualization();
+    } else {
+      this.connectToAudioSource();
+      this.animateWithAudioData();
+    }
   }
   
   stop(): void {
@@ -313,6 +402,15 @@ class AudioVisualizer {
       this.bars.forEach(bar => {
         bar.style.height = '3px';
       });
+    }
+    
+    // Disconnect any audio sources
+    if (this.source) {
+      try {
+        this.source.disconnect();
+      } catch (e) {
+        // Ignore errors on disconnect
+      }
     }
   }
   
